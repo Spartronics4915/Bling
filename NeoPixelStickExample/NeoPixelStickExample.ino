@@ -1,10 +1,10 @@
 /*  Test program to show how to use NeoPixel LEDs
- *  
+ *
  *  Connect Arduino to NeoPixel stick with 5V and Gnd for power,
  *  and pin D6 for control of the LEDs. Make sure that the
  *  Arduino is switched to 5V (not 3.3V) if it has a switch.
- *  
- *  
+ *
+ *
  */
 
 /* Include files for libraries, etc. */
@@ -15,9 +15,9 @@
 #define CONTROL_PIN 6
 
 /*  Initialize the NeoPixel library
- *   
+ *
  *  Adafruit_NeoPixel pixel_stick = Adafruit_NeoPixel(NUMBER_OF_LEDS, CONTROL_PIN, NEO_GRB + NEO_KHZ800);
- *  
+ *
  *  Creates an objecct called 'pixel_stick'
  *  Parameter 1 = number of pixels in pixel_stick
  *  Parameter 2 = Arduino pin number (most are OK to use)
@@ -47,7 +47,7 @@ void setup() {
  * all the things you want it to do.
  */
 void loop() {
-  /* 
+  /*
    * Some example procedures showing how to display to the pixels.
    * See the function definitions below the loop() to learn what
    * they are doing.
