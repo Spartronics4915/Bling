@@ -1,6 +1,4 @@
-# Bling
-All the bling code, examples, tutorials, and other information
+# Bling-example
+An example Arduino sketch to demonstrate Bling programming using the NeoPixel Stick
 
-This repository has Arduino projects in it. Clone it to your Arduino directory and the open the projeccts in the Arduino IDE.
-
-Libraries are managed separately, and must be installed manually if needed. They are not to be committed to this repository.
+This repo should be cloned directly into your Arduino sketch folder, and then open the project with the Arduino IDE.
