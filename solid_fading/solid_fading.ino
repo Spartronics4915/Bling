@@ -1,5 +1,3 @@
-
-
 #include "FastLED.h"
 
 
@@ -8,15 +6,15 @@
 #define DELAY_TIME 6
 
 
-#define FADING_COLOR CRGB(0, 50, 170)
+#define FADING_COLOR1 CRGB(0, 50, 170)  //blue
+#define FADING_COLOR2 CRGB (90, 90, 0)  //yellow
 
-// Define the array of leds
 CRGB leds[NUM_LEDS];  
 
 void setup() {
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   for (int i=0 ; i < NUM_LEDS; i++) {
-        leds[i] = FADING_COLOR;
+        leds[i] = FADING_COLOR1;
   }
   FastLED.setBrightness(30);
 }
