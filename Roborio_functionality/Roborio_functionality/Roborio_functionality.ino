@@ -1,11 +1,11 @@
-
 #include <Adafruit_NeoPixel.h>
 
-#define BLACK Adafruit_NeoPixel::Color(10,10,10)
+#define BLACK Adafruit_NeoPixel::Color(10,10,10)//actually a very dim white
 #define BLUE Adafruit_NeoPixel::Color(0, 0, 255)
 #define RED Adafruit_NeoPixel::Color(255, 0, 0)
 #define YELLOW Adafruit_NeoPixel::Color(255, 255, 0)
 #define GREEN Adafruit_NeoPixel::Color(0, 255, 0)
+#define PURPLE Adafruit_NeoPixel::Color(128,0,128)
 
 #define NUM_LEDS 150
 #define PIN 11
@@ -16,16 +16,16 @@ enum {
   YELLOW_LEDS,
   GREEN_LEDS,
   RED_LEDS,
+  PURPLE_LEDS,
 };
 
 int blingMode = DEFAULT_LEDS;
 bool flashing = false;
+bool fast_flashing = false;
+bool fading = false;
 
 // allocate our pixel memory, configuYELLOW to match our hardware
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB+NEO_KHZ800);
-
-
-
 
 void clearStrip(uint32_t c)
 {
@@ -67,13 +67,24 @@ void loop() {
       case '4':
       blingMode = GREEN_LEDS;
       break;
-      case '9':
-      flashing = true;
+      case '5':
+      blingMode = PURPLE_LEDS;
+      break;
+      case '6':
+      fading = true;
+      break;
+      case '7':
+      fast_flashing = true;
       break;
       case'8':
       flashing = false;
+      fast_flashing = false;
+      fading = false;
+      pixels.setBrightness(255);
       break;
-        
+      case '9':
+      flashing = true;
+      break;
       /* Add more modes here */
       //default:
         // The byte was not for a valid message, so we ignore it...
@@ -101,13 +112,40 @@ void loop() {
         case GREEN_LEDS:
         clearStrip(GREEN);
         break;
+        case PURPLE_LEDS:
+        clearStrip(PURPLE);
+        break;
     }
           if (flashing){
           
+        fast_flashing = false;
         delay(500);
         clearStrip(BLACK);
         delay(500);
           }
+          if (fast_flashing){
+
+        flashing = false;
+        delay(150);
+        clearStrip(BLACK);
+        delay(150);
+          }
+   if(fading){
+  for(int brightness = 3; brightness<=255; brightness++){
+    pixels.setBrightness(brightness);
+    pixels.show();
+    delay(0.5);  
+  }
+  
+  for(int brightness = 255; brightness>=3; brightness--){
+    pixels.setBrightness(brightness);
+    pixels.show();
+    delay(0.5);  
+   
+          
+
+      }
+   }
 }
  /* end of loop func */
 
