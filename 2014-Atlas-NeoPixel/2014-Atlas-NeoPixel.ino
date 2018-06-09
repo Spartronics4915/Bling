@@ -10,7 +10,7 @@
 #include "FastLED.h"
 
 // How many leds on your strip?
-#define NUM_LEDS 8
+#define NUM_LEDS 150
 
 // For led chips like Neopixels, which have a data line, ground, and power,
 // you just need to define DATA_PIN.  For led chipsets that are SPI based
