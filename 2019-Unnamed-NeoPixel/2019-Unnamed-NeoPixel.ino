@@ -5,10 +5,10 @@
 
 //Static loop variables:
   #define SLOOP(min, maxv) static int i = (min); static int j = (min); if (i >= maxv) { i = (min); } int max = (maxv);
-  #define ENDSLOOP(min,maxv) j = i; if (i < (maxv)) {i++;}
+  #define ENDSLOOP(min, maxv) j = i; if (i < (maxv)) {i++;}
 
 #define PIN 4
-#define NUM_PIXELS 12
+#define NUM_PIXELS 30
 
 #define RED Adafruit_NeoPixel::Color(255,0,0)
 #define GREEN Adafruit_NeoPixel::Color(0, 255,0)
@@ -18,6 +18,9 @@
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int numPixels = strip.numPixels();
+
+void off() {}
+
 void forwards()
 {
   SLOOP(0, numPixels)
@@ -118,9 +121,6 @@ bool checkForCommand(void)
     result = true;
     currentCommand = newCommand;
     Serial.println(" VALID");
-  }else if (newCommand == '\0')
-  {
-    Serial.println("");
   }
   return result;
 }
@@ -131,37 +131,31 @@ void setup()
   pinMode(13, OUTPUT);
   Serial.println("Hello, -- HELP! I'M TRAPPED IN AN ARDUINO FACTORY!! -- LEDs!");
   strip.begin();
+  strip.setBrightness(80);
   strip.show();
 }
 
 void loop()
 {
-/**  digitalWrite(13, HIGH);
-  delay(1000); // Wait for 1000 millisecond(s)
-  digitalWrite(13, LOW);
-  delay(1000); // Wait for 1000 millisecond(s)*/
   checkForCommand();
   switch(currentCommand) {
     case '0':
-      forwards();
+      off();
       break;
     case '1':
-      backwards();
-      break;
-    case '2':
       forwardsSp();
       break;
-    case '3':
+    case '2':
       backwardsSp();
+      break;
+    case '3':
+      blinkSp();
       break;
     case '4':
       blood();
       break;
-    case '5':
-      blinkSp();
-      break;
     default:
-      forwards();
+      blood();
   }
   delay(WaitPeriod);
 }
