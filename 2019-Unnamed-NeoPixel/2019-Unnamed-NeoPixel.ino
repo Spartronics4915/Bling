@@ -111,6 +111,7 @@ bool checkForCommand(void)
       Serial.print("Got command: ");
       Serial.print(tempCommand);
       newCommand = tempCommand;
+//      break;
     }
   }
 
@@ -139,6 +140,9 @@ void loop()
 {
   checkForCommand();
   switch(currentCommand) {
+    case '\0':
+      forwards();
+      break;
     case '0':
       off();
       break;
