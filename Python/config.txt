@@ -1,0 +1,1 @@
+{'default_ip': '10.49.15.2', 'arduino_port': 'COM3'}
