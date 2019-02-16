@@ -14,14 +14,15 @@
 #define GREEN Adafruit_NeoPixel::Color(0, 255,0)
 #define BLUE Adafruit_NeoPixel::Color(0,0,255)
 #define YELLOW Adafruit_NeoPixel::Color(255,255,0)
+#define PURPLE Adafruit_NeoPixel::Color(255, 0, 255)
 #define OFF Adafruit_NeoPixel::Color(0,0,0)
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
-int numPixels = strip.numPixels();
+Adafruit_NeoPixel strip0 = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
+int numPixels = strip0.numPixels();
 
-void off() {}
+void off(Adafruit_NeoPixel& strip) {}
 
-void forwards()
+void forwards(Adafruit_NeoPixel& strip)
 {
   SLOOP(0, numPixels)
     strip.setPixelColor(j, OFF);
@@ -30,7 +31,7 @@ void forwards()
   ENDSLOOP(0, numPixels)
 }
 
-void backwards()
+void backwards(Adafruit_NeoPixel& strip)
 {
   SLOOP(0, numPixels)
     strip.setPixelColor(numPixels-j-1, OFF);
@@ -39,7 +40,7 @@ void backwards()
   ENDSLOOP(0, numPixels)
 }
 
-void forwardsSp()
+void forwardsSp(Adafruit_NeoPixel& strip)
 {
   SLOOP(0, numPixels)
     strip.setPixelColor(j, BLUE);
@@ -48,7 +49,7 @@ void forwardsSp()
   ENDSLOOP(0, numPixels)
 }
 
-void backwardsSp()
+void backwardsSp(Adafruit_NeoPixel& strip)
 {
   SLOOP(0, numPixels)
     strip.setPixelColor(numPixels-j-1, BLUE);
@@ -57,7 +58,25 @@ void backwardsSp()
   ENDSLOOP(0, numPixels)
 }
 
-void blood()
+void forwardsPu(Adafruit_NeoPixel& strip)
+{
+  SLOOP(0, numPixels)
+    strip.setPixelColor(j, PURPLE);
+    strip.setPixelColor(i, GREEN);
+    strip.show();
+  ENDSLOOP(0, numPixels)
+}
+
+void backwardsPu(Adafruit_NeoPixel& strip)
+{
+  SLOOP(0, numPixels)
+    strip.setPixelColor(numPixels-j-1, PURPLE);
+    strip.setPixelColor(numPixels-i-1, GREEN);
+    strip.show();
+  ENDSLOOP(0, numPixels)
+}
+
+void blood(Adafruit_NeoPixel& strip)
 {
   static int k = 0;
   for (int i = 0; i < numPixels; i++)
@@ -74,7 +93,7 @@ void blood()
   }
 }
 
-void blinkSp()
+void blinkSp(Adafruit_NeoPixel& strip)
 {
   static int k = 0;
   for (int i = 0; i < numPixels; i++)
@@ -131,9 +150,9 @@ void setup()
   Serial.begin(9600);
   pinMode(13, OUTPUT);
   Serial.println("Hello, -- HELP! I'M TRAPPED IN AN ARDUINO FACTORY!! -- LEDs!");
-  strip.begin();
-  strip.setBrightness(80);
-  strip.show();
+  strip0.begin();
+  strip0.setBrightness(60);
+  strip0.show();
 }
 
 void loop()
@@ -141,25 +160,31 @@ void loop()
   checkForCommand();
   switch(currentCommand) {
     case '\0':
-      forwards();
+      forwards(strip0);
       break;
     case '0':
-      off();
+      off(strip0);
       break;
     case '1':
-      forwardsSp();
+      forwardsSp(strip0);
       break;
     case '2':
-      backwardsSp();
+      backwardsSp(strip0);
       break;
     case '3':
-      blinkSp();
+      blinkSp(strip0);
       break;
     case '4':
-      blood();
+      forwardsPu(strip0);
+      break;
+    case '5':
+      backwardsPu(strip0);
+      break;
+    case '6':
+      blood(strip0);
       break;
     default:
-      blood();
+      blood(strip0);
   }
   delay(WaitPeriod);
 }
