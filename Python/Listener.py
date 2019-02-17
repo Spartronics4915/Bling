@@ -11,7 +11,6 @@
 
 import os
 import sys
-import time
 from networktables import NetworkTables
 
 import serial, time
@@ -20,15 +19,33 @@ from ast import literal_eval
 
 ##print(list(serial.tools.list_ports.comports()[0]))
 
-ser = serial.Serial()
-ser.baudrate = 9600
-with open('config.txt') as file:
-        ser.port = literal_eval(file.read())['serial_port']
-        file.close()
-        print(ser.port)
-ser.open()
-time.sleep(3)
-ser.write('0'.encode('ascii'))
+waited = False
+
+
+while True:
+    try:
+        ser = serial.Serial()
+        ser.baudrate = 9600
+        with open('config.txt') as file:
+                ser.port = literal_eval(file.read())['serial_port']
+                file.close()
+        ser.open()
+        print("\n" + str(ser.port) if waited else ser.port)
+        time.sleep(3)
+        ser.write('0'.encode('ascii'))
+        break
+    except:
+        if not waited:
+            print("No serial detected.", end="")
+            waited = True
+        for x in range(0,30):
+            print(".", end="")
+            time.sleep(1/3)
+            if sys.stdout is not None:
+                sys.stdout.flush()
+
+        
+
 
 commands = {
     "init": '7'.encode('ascii'),
@@ -91,14 +108,18 @@ def valueChanged(table, key, value, isNew):
 def connectionListener(connected, info):
     print(info, "; Connected=%s" % connected)
 
+while True:
+    try:
+        NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
 
-NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
+        robot = NetworkTables.getTable("SmartDashboard/Robot")
+        robot.addEntryListener(valueChanged)
 
-robot = NetworkTables.getTable("SmartDashboard/Robot")
-robot.addEntryListener(valueChanged)
-
-superstructure = NetworkTables.getTable("Smartdashboard/Superstructure")
-superstrucutre.addEntryListener(superListener)
-
+        superstructure = NetworkTables.getTable("Smartdashboard/Superstructure")
+        superstrucutre.addEntryListener(superListener)
+        break
+    except:
+        print("Not connected in.")
+        time.sleep(30)
 while True:
     time.sleep(1)
