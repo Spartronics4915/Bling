@@ -31,6 +31,7 @@ time.sleep(3)
 ser.write('0'.encode('ascii'))
 
 commands = {
+    "init": '7'.encode('ascii'),
     "off": '0'.encode('ascii'),
     'teleopF': '1'.encode('ascii'),
     'teleopR' : '2'.encode('ascii'),
