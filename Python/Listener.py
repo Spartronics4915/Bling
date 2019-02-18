@@ -77,6 +77,7 @@ def superListener(table, key, value, isNew):
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         superstructureState = value
 
+
 def valueChanged(table, key, value, isNew):
     if key == "GamePhase":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
