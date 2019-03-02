@@ -18,8 +18,9 @@ import time
 import serial.tools.list_ports
 from ast import literal_eval
 
-# Global Variables.
-ip = ""
+logging.basicConfig(level=logging.DEBUG)
+
+ip = "10.49.15.2"
 reversed = False
 superstructureState = "YEEEEET"
 ser = serial.Serial()
@@ -33,14 +34,49 @@ commands = {
     'climb': b'4'
 }
 
-# Event Listeners
+if len(sys.argv) < 2:
+    print("No IP address supplied. Using default value ", end="")
+    with open('config.txt') as file:
+        ip = literal_eval(file.read())['default_ip']
+        file.close()
+        print(ip)
+else:
+    ip = sys.argv[1]
+
+def serialize():
+    waited = False
+    serialed = False
+    while not serialed:
+        try:
+            ser.baudrate = 9600
+            with open('config.txt') as file:
+                port = literal_eval(file.read())['serial_port']
+                ser.port = port if port != "DEFAULT" else list(serial.tools.list_ports.comports()[0])[0]
+            ser.open()
+            print("\n" + str(ser.port) if waited else ser.port)
+            time.sleep(3)
+            ser.write('0'.encode('ascii'))
+            serialed = True
+        except serial.serialutil.SerialException:
+            if not waited:
+                print("No serial detected.", end="")
+                waited = True
+            for x in range(0, 30):
+                print(".", end="")
+                time.sleep(1/3)
+                if sys.stdout is not None:
+                    sys.stdout.flush()
+
+serialize()
+
+NetworkTables.initialize(server=ip)
 
 
 def superListener(table, key, value, isNew):
     if key == "Reverse":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         reversed = value
-    if key == "WantedState":
+    elif key == "WantedState":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         superstructureState = value
 
@@ -66,82 +102,18 @@ def connectionListener(connected, info):
     print(info, "; Connected=%s" % connected)
 
 
-# Parsing Command Line arguments
+NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
 
-def parse_args():
-    if len(sys.argv) < 2:
-        print("No IP address supplied. Using default value ", end="")
-        with open('config.txt') as file:
-            ip = literal_eval(file.read())['default_ip']
-            file.close()
-            print(ip)
-    else:
-        ip = sys.argv[1]
+robot = NetworkTables.getTable("SmartDashboard/Robot")
+robot.addEntryListener(valueChanged)
 
-# Defining Serial Port
+superstructure = NetworkTables.getTable("SmartDashboard/Superstructure")
+superstructure.addEntryListener(superListener)
 
-
-def serial_init():
-    # Print out the first connected port.
-    waited = False
-    serialed = False
-    while not serialed:
-        try:
-            ser.baudrate = 9600
-            with open('config.txt') as file:
-                ser.port = literal_eval(file.read())['serial_port']
-            ser.open()
-            print("\n" + str(ser.port) if waited else ser.port)
-            time.sleep(3)
-            ser.write('0'.encode('ascii'))
-            serialed = True
-        except serial.serialutil.SerialException:
-            if not waited:
-                print("No serial detected.", end="")
-                waited = True
-            for x in range(0, 30):
-                print(".", end="")
-                time.sleep(1/3)
-                if sys.stdout is not None:
-                    sys.stdout.flush()
-
-
-def network():
-    NetworkTables.initialize(server=ip)
-
-    networked = False
-
-    while not networked:
-        try:
-            NetworkTables.addConnectionListener(
-                connectionListener,
-                immediateNotify=True
-                )
-
-            robot = NetworkTables.getTable(
-                "SmartDashboard/Robot"
-                )
-            robot.addEntryListener(valueChanged)
-
-            superstructure = NetworkTables.getTable(
-                "Smartdashboard/Superstructure"
-                )
-            superstrucutre.addEntryListener(superListener)
-            print("Connected")
-            networked = True
-        except NameError:
-            print("Not connected to robot.")
-            time.sleep(30)
-
-
-def main():
-    parse_args()
-    serial_init()
-    # To see messages from networktables, you must setup logging
-    logging.basicConfig(level=logging.DEBUG)
-    network()
-    while True:
-        time.sleep(1)
-
-
-main()
+while True:
+    try:
+        print(str(ser.read()), sep='', end='')
+    except:
+        ser.close()
+        serialize()
+    time.sleep(1)
