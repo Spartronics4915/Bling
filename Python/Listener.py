@@ -87,7 +87,6 @@ def serial_init():
     serialed = False
     while not serialed:
         try:
-            print("Test")
             ser.baudrate = 9600
             with open('config.txt') as file:
                 ser.port = literal_eval(file.read())['serial_port']
@@ -128,6 +127,7 @@ def network():
                 "Smartdashboard/Superstructure"
                 )
             superstrucutre.addEntryListener(superListener)
+            print("Connected")
             networked = True
         except NameError:
             print("Not connected to robot.")

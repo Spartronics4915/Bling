@@ -1,2 +1,2 @@
 @echo off
-python3 -m pip install pynetworktables
+python -m pip install pynetworktables

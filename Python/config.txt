@@ -1,1 +1,1 @@
-{'default_ip': '10.49.15.2', 'serial_port': 'COM3'}
+{'default_ip': '10.49.15.2', 'serial_port': 'COM4'}
