@@ -159,6 +159,16 @@ void fadeSp(Adafruit_NeoPixel& strip)
   delay(10);
 }
 
+void blingOn() 
+{
+  digitalWrite(6, HIGH);
+}
+
+void blingOff()
+{
+  digitalWrite(6, LOW);
+}
+
 char currentCommand = '\0';
 
 // Check for a new command byte, and return true if one is found
@@ -198,6 +208,7 @@ void setup()
 {
   Serial.begin(9600);
   pinMode(13, OUTPUT);
+  pinMode(6, OUTPUT);
   Serial.println("Hello, -- HELP! I'M TRAPPED IN AN ARDUINO FACTORY!! -- LEDs!");
   strip0.begin();
   strip0.setBrightness(60);
@@ -236,6 +247,8 @@ void loop()
     case '8':
       fadeSp(strip0);
       break;
+    case '9':
+      bling();
     default:
       blood(strip0);
   }

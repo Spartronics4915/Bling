@@ -31,8 +31,10 @@ commands = {
     'teleopR': b'2',
     'auto': b'3',
     'testing': b'6',
-    'climb': b'4'
+    'climb': b'4',
+    'bling': b'8'
 }
+curSignal = b'0'
 
 if len(sys.argv) < 2:
     print("No IP address supplied. Using default value ", end="")
@@ -82,18 +84,31 @@ def valueChanged(table, key, value, isNew):
     if key == "GamePhase":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         if value == "DISABLED":
-            ser.write(commands['off'])
+            curSignal = commands['off']
+            ser.write(curSignal)
         elif value == "AUTONOMOUS":
-            ser.write(commands['auto'])
+            curSignal = commands['auto']
+            ser.write(curSignal)
         elif value == "TELEOP" and superstructureState == "CLIMB":
-            ser.write(commands['climb'])
+            curSignal = commands['climb']
+            ser.write(curSignal)
         elif value == "TELEOP" and not reversed:
-            ser.write(commands['teleopF'])
+            curSignal = commands['teleopF']
+            ser.write(curSignal)
         elif value == "TELEOP" and reversed:
-            ser.write(commands['teleopR'])
+            curSignal = commands['teleopR']
+            ser.write(curSignal)
         elif value == "TEST":
-            ser.write(commands['testing'])
+            curSignal = commands['testing']
+            ser.write(curSignal)
 
+
+def blingListener(table, key, value, isNew):
+    if key == "State" and value == "Acquired":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        ser.write(commands['bling'])
+        time.sleep(3)
+        ser.write(curSignal)
 
 def connectionListener(connected, info):
     print(info, "; Connected=%s" % connected)
@@ -106,6 +121,9 @@ robot.addEntryListener(valueChanged)
 
 superstructure = NetworkTables.getTable("SmartDashboard/Superstructure")
 superstructure.addEntryListener(superListener)
+
+vision = NetworkTables.getTables("SmartDashboard/Vision")
+vision.addEntryListener(blingListener)
 
 while True:
     time.sleep(1)
