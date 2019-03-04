@@ -51,6 +51,7 @@ else:
 def serialize():
     waited = False
     serialed = False
+    time_wait = 0
     while not serialed:
         try:
             ser.baudrate = 9600
@@ -61,7 +62,7 @@ def serialize():
                         serial.port = list(list_ports.comports()[0])[0]
                     except IndexError:
                         print("No serial port connected")
-                        quit()
+                        raise SerialException
                 else:
                     serial.port = port
             ser.open()
@@ -71,11 +72,11 @@ def serialize():
             serialed = True
         except serial.serialutil.SerialException:
             if not waited:
-                print("No serial detected.", end="")
+                print("No serial detected. (0s)", end="")
                 waited = True
-            for x in range(0, 30):
-                print(".", end="")
-                time.sleep(1/3)
+            for x in range(0, 10):
+                print("\rNo serial detected. (", x, "s)", sep="", end="")
+                time.sleep(1)
                 if sys.stdout is not None:
                     sys.stdout.flush()
 
