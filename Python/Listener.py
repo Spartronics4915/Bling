@@ -15,8 +15,9 @@ from networktables import NetworkTables
 import logging
 import serial
 import time
-import serial.tools.list_ports
+import serial.tools.list_ports as list_ports
 from ast import literal_eval
+from serial.serialutil import SerialException
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -35,6 +36,7 @@ commands = {
     'bling': b'8'
 }
 curSignal = b'0'
+phase = ''
 
 if len(sys.argv) < 2:
     print("No IP address supplied. Using default value ", end="")
@@ -46,43 +48,49 @@ else:
     ip = sys.argv[1]
 
 
-waited = False
-serialed = False
-while not serialed:
-    try:
-        ser.baudrate = 9600
-        with open('config.txt') as file:
-            ser.port = literal_eval(file.read())['serial_port']
-        ser.open()
-        print("\n" + str(ser.port) if waited else ser.port)
-        time.sleep(3)
-        ser.write('0'.encode('ascii'))
-        serialed = True
-    except serial.serialutil.SerialException:
-        if not waited:
-            print("No serial detected.", end="")
-            waited = True
-        for x in range(0, 30):
-            print(".", end="")
-            time.sleep(1/3)
-            if sys.stdout is not None:
-                sys.stdout.flush()
+def serialize():
+    waited = False
+    serialed = False
+    while not serialed:
+        try:
+            ser.baudrate = 9600
+            with open('config.txt') as file:
+                port = literal_eval(file.read())['serial_port']
+                if port == "DEFAULT":
+                    try:
+                        serial.port = list(list_ports.comports()[0])[0]
+                    except IndexError:
+                        print("No serial port connected")
+                        quit()
+                else:
+                    serial.port = port
+            ser.open()
+            print("\n" + str(ser.port) if waited else ser.port)
+            time.sleep(3)
+            ser.write('0'.encode('ascii'))
+            serialed = True
+        except serial.serialutil.SerialException:
+            if not waited:
+                print("No serial detected.", end="")
+                waited = True
+            for x in range(0, 30):
+                print(".", end="")
+                time.sleep(1/3)
+                if sys.stdout is not None:
+                    sys.stdout.flush()
+
+
+serialize()
 
 NetworkTables.initialize(server=ip)
-
-
-def superListener(table, key, value, isNew):
-    if key == "Reverse":
-        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
-        reversed = value
-    elif key == "WantedState":
-        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
-        superstructureState = value
 
 
 def valueChanged(table, key, value, isNew):
     if key == "GamePhase":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        print(phase, end=' ')
+        phase = value
+        print(phase)
         if value == "DISABLED":
             curSignal = commands['off']
             ser.write(curSignal)
@@ -103,12 +111,29 @@ def valueChanged(table, key, value, isNew):
             ser.write(curSignal)
 
 
+def superListener(table, key, value, isNew):
+    if key == "Reverse":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        reversed = value
+        print("Reversed:", reversed)
+        if phase == "TELEOP" and not reversed:
+            curSignal = commands['teleopF']
+            ser.write(curSignal)
+        elif phase == "TELEOP" and reversed:
+            curSignal = commands['teleopR']
+            ser.write(curSignal)
+    elif key == "WantedState":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        superstructureState = value
+
+
 def blingListener(table, key, value, isNew):
     if key == "State" and value == "Acquired":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         ser.write(commands['bling'])
         time.sleep(3)
         ser.write(curSignal)
+
 
 def connectionListener(connected, info):
     print(info, "; Connected=%s" % connected)
@@ -126,4 +151,9 @@ vision = NetworkTables.getTables("SmartDashboard/Vision")
 vision.addEntryListener(blingListener)
 
 while True:
+    try:
+        print(str(ser.read()), sep='', end='')
+    except SerialException:
+        ser.close()
+        serialize()
     time.sleep(1)

@@ -4,11 +4,11 @@
 #define TimeoutPeriod 20
 
 //Static loop variables:
-  #define SLOOP(min, maxv) static int i = (min); static int j = (min); if (i >= maxv) { i = (min); } int max = (maxv);
-  #define ENDSLOOP(min, maxv) j = i; if (i < (maxv)) {i++;}
+  #define SLOOP(min, maxv, trail) static int i = (min); static int j = (min) - (trail); if (i >= maxv) { i = (min); } if (j >= maxv) { j = (min); } int max = (maxv);
+  #define ENDSLOOP(min, maxv) if (j < (maxv)) {j++;}; if (i < (maxv)) {i++;}
 
 #define PIN 4
-#define NUM_PIXELS 30
+#define NUM_PIXELS 150
 
 #define RED Adafruit_NeoPixel::Color(127,0,0)
 #define GREEN Adafruit_NeoPixel::Color(0, 127,0)
@@ -17,6 +17,9 @@
 #define PURPLE Adafruit_NeoPixel::Color(127, 0, 127)
 #define CYAN Adafruit_NeoPixel::Color(0, 127, 127)
 #define OFF Adafruit_NeoPixel::Color(0,0,0)
+
+#define SHORT_DELAY delay(10)
+#define LONG_DELAY delay(250)
 
 Adafruit_NeoPixel strip0 = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int numPixels = strip0.numPixels();
@@ -32,61 +35,61 @@ void off(Adafruit_NeoPixel& strip) {}
 
 void forwards(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(j, OFF);
     strip.setPixelColor(i, RED);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
 void backwards(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(numPixels-j-1, OFF);
     strip.setPixelColor(numPixels-i-1, RED);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
 void forwardsSp(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(j, BLUE);
     strip.setPixelColor(i, YELLOW);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
 void backwardsSp(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(numPixels-j-1, BLUE);
     strip.setPixelColor(numPixels-i-1, YELLOW);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
 void forwardsPu(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(j, PURPLE);
     strip.setPixelColor(i, GREEN);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
 void backwardsPu(Adafruit_NeoPixel& strip)
 {
-  SLOOP(0, numPixels)
+  SLOOP(0, numPixels, numPixels/2)
     strip.setPixelColor(numPixels-j-1, PURPLE);
     strip.setPixelColor(numPixels-i-1, GREEN);
     strip.show();
-    delay(250);
+    SHORT_DELAY;
   ENDSLOOP(0, numPixels)
 }
 
@@ -105,7 +108,7 @@ void blood(Adafruit_NeoPixel& strip)
     } else
       strip.setPixelColor(i, RED);
   }
-  delay(250);
+  LONG_DELAY;
 }
 
 void blinkSp(Adafruit_NeoPixel& strip)
@@ -123,7 +126,7 @@ void blinkSp(Adafruit_NeoPixel& strip)
     } else
       strip.setPixelColor(i, YELLOW);
   }
-  delay(250);
+  LONG_DELAY;
 }
 
 void blinkPu(Adafruit_NeoPixel& strip)
@@ -141,7 +144,7 @@ void blinkPu(Adafruit_NeoPixel& strip)
     else
       strip.setPixelColor(i, GREEN);
   }
-  delay(250);
+  LONG_DELAY;
 }
 
 void fadeSp(Adafruit_NeoPixel& strip)
@@ -149,7 +152,7 @@ void fadeSp(Adafruit_NeoPixel& strip)
   static double k = 0;
   int i = 127 * sin(k/50);
   int j = 127 * sin(k/50 - M_PI);
-  Serial.println(i);
+//  Serial.println(i);
   for (int x = 0; x < numPixels; x++)
   {
     strip.setPixelColor(x, strip.Color((i >= 0) ? i : 0, (i >= 0) ? i : 0, (j >= 0) ? j : 0));
@@ -247,8 +250,8 @@ void loop()
     case '8':
       fadeSp(strip0);
       break;
-    case '9':
-      bling();
+//    case '9':
+//      bling();
     default:
       blood(strip0);
   }
