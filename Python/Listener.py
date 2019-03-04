@@ -48,6 +48,9 @@ else:
     ip = sys.argv[1]
 
 
+NetworkTables.initialize(server=ip)
+
+
 def serialize():
     waited = False
     serialed = False
@@ -82,8 +85,6 @@ def serialize():
 
 
 serialize()
-
-NetworkTables.initialize(server=ip)
 
 
 def valueChanged(table, key, value, isNew):
