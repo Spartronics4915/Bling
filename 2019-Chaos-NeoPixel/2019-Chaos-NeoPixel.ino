@@ -158,9 +158,7 @@ void fadeSp(Adafruit_NeoPixel& strip)
     strip.setPixelColor(x, strip.Color((i >= 0) ? i : 0, (i >= 0) ? i : 0, (j >= 0) ? j : 0));
   }
   strip.show();
-  k = ++k > 50 * M_PI ? -50 * M_PI : k;
-  if (k > 140 * M_PI)
-    k = -12 * M_PI;
+  k = ++k > 12 * M_PI ? -12 * M_PI : k;
   delay(10);
 }
 
