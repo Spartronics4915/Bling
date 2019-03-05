@@ -62,12 +62,13 @@ def serialize():
                 port = literal_eval(file.read())['serial_port']
                 if port == "DEFAULT":
                     try:
-                        serial.port = list(list_ports.comports()[0])[0]
+                        print("Detecting")
+                        ser.port = list(list_ports.comports()[0])[0]
                     except IndexError:
                         print("No serial port connected")
                         raise SerialException
                 else:
-                    serial.port = port
+                    ser.port = port
             ser.open()
             print("\n" + str(ser.port) if waited else ser.port)
             time.sleep(3)
@@ -78,10 +79,12 @@ def serialize():
                 print("No serial detected. (0s)", end="")
                 waited = True
             for x in range(0, 10):
-                print("\rNo serial detected. (", x, "s)", sep="", end="")
+                print("\rNo serial detected. (", time_wait, "s)", sep="", end="")
                 time.sleep(1)
+                time_wait += 1
                 if sys.stdout is not None:
                     sys.stdout.flush()
+    print("Detected")
 
 
 serialize()
@@ -89,6 +92,7 @@ serialize()
 
 def valueChanged(table, key, value, isNew):
     if key == "GamePhase":
+        global phase
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         print(phase, end=' ')
         phase = value
@@ -117,6 +121,7 @@ def superListener(table, key, value, isNew):
     if key == "Reverse":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         reversed = value
+        global phase
         print("Reversed:", reversed)
         if phase == "TELEOP" and not reversed:
             curSignal = commands['teleopF']
@@ -149,7 +154,7 @@ robot.addEntryListener(valueChanged)
 superstructure = NetworkTables.getTable("SmartDashboard/Superstructure")
 superstructure.addEntryListener(superListener)
 
-vision = NetworkTables.getTables("SmartDashboard/Vision")
+vision = NetworkTables.getTable("SmartDashboard/Vision")
 vision.addEntryListener(blingListener)
 
 while True:

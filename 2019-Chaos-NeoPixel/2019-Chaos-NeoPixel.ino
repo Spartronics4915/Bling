@@ -159,6 +159,8 @@ void fadeSp(Adafruit_NeoPixel& strip)
   }
   strip.show();
   k = ++k > 50 * M_PI ? -50 * M_PI : k;
+  if (k > 140 * M_PI)
+    k = -12 * M_PI;
   delay(10);
 }
 
