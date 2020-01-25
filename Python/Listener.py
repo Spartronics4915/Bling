@@ -21,6 +21,7 @@ from serial.serialutil import SerialException
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Variables
 ip = "10.49.15.2"
 reversed = False
 superstructureState = "YEEEEET"
@@ -38,6 +39,7 @@ commands = {
 curSignal = b'0'
 phase = ''
 
+# finding ip address for NetworkTable
 if len(sys.argv) < 2:
     print("No IP address supplied. Using default value ", end="")
     with open('config.txt') as file:
@@ -47,14 +49,15 @@ if len(sys.argv) < 2:
 else:
     ip = sys.argv[1]
 
-
+# Initializing network tables
 NetworkTables.initialize(server=ip)
 
-
+# serializing message
 def serialize():
     waited = False
     serialed = False
     time_wait = 0
+    # detect arduinno
     while not serialed:
         try:
             ser.baudrate = 9600
@@ -91,6 +94,7 @@ serialize()
 
 
 def valueChanged(table, key, value, isNew):
+    # write commands
     if key == "GamePhase":
         global phase
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
@@ -116,7 +120,7 @@ def valueChanged(table, key, value, isNew):
             curSignal = commands['testing']
             ser.write(curSignal)
 
-
+# listen to networktable
 def superListener(table, key, value, isNew):
     if key == "Reverse":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
@@ -133,7 +137,7 @@ def superListener(table, key, value, isNew):
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
         superstructureState = value
 
-
+# check for response in bling
 def blingListener(table, key, value, isNew):
     if key == "State" and value == "Acquired":
         print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
