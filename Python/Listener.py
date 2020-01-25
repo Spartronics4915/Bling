@@ -11,42 +11,36 @@
 
 import os
 import sys
-import time
 from networktables import NetworkTables
-
-import serial, time
-import serial.tools.list_ports
-from ast import literal_eval
-
-print(list(serial.tools.list_ports.comports()[0]))
-
-ser = serial.Serial()
-ser.baudrate = 9600
-with open('config.txt') as file:
-        ser.port = literal_eval(file.read())['arduino_port']
-        file.close()
-        print(ser.port)
-ser.open()
-time.sleep(3)
-ser.write('0'.encode('ascii'))
-
-commands = {
-    "off": '0'.encode('ascii'),
-    'teleopF': '1'.encode('ascii'),
-    'teleopR' : '2'.encode('ascii'),
-    'auto': '3'.encode('ascii'),
-    'testingF': '4'.encode('ascii'),
-    'testingR': '5'.encode('ascii')
-}
-
-# To see messages from networktables, you must setup logging
 import logging
+import serial
+import time
+import serial.tools.list_ports as list_ports
+from ast import literal_eval
+from serial.serialutil import SerialException
 
 logging.basicConfig(level=logging.DEBUG)
 
-ip = ""
+# Variables
+ip = "10.49.15.2"
+reversed = False
+superstructureState = "YEEEEET"
+ser = serial.Serial()
+commands = {
+    'init': b'7',
+    'off': b'0',
+    'teleopF': b'1',
+    'teleopR': b'2',
+    'auto': b'3',
+    'testing': b'6',
+    'climb': b'4',
+    'bling': b'8'
+}
+curSignal = b'0'
+phase = ''
 
-if len(sys.argv) != 2:
+# finding ip address for NetworkTable
+if len(sys.argv) < 2:
     print("No IP address supplied. Using default value ", end="")
     with open('config.txt') as file:
         ip = literal_eval(file.read())['default_ip']
@@ -55,19 +49,101 @@ if len(sys.argv) != 2:
 else:
     ip = sys.argv[1]
 
+# Initializing network tables
 NetworkTables.initialize(server=ip)
 
+# serializing message
+def serialize():
+    waited = False
+    serialed = False
+    time_wait = 0
+    # detect arduinno
+    while not serialed:
+        try:
+            ser.baudrate = 9600
+            with open('config.txt') as file:
+                port = literal_eval(file.read())['serial_port']
+                if port == "DEFAULT":
+                    try:
+                        print("Detecting")
+                        ser.port = list(list_ports.comports()[0])[0]
+                    except IndexError:
+                        print("No serial port connected")
+                        raise SerialException
+                else:
+                    ser.port = port
+            ser.open()
+            print("\n" + str(ser.port) if waited else ser.port)
+            time.sleep(3)
+            ser.write('0'.encode('ascii'))
+            serialed = True
+        except serial.serialutil.SerialException:
+            if not waited:
+                print("No serial detected. (0s)", end="")
+                waited = True
+            for x in range(0, 10):
+                print("\rNo serial detected. (", time_wait, "s)", sep="", end="")
+                time.sleep(1)
+                time_wait += 1
+                if sys.stdout is not None:
+                    sys.stdout.flush()
+    print("Detected")
+
+
+serialize()
+
+
 def valueChanged(table, key, value, isNew):
+    # write commands
     if key == "GamePhase":
-        print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
+        global phase
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        print(phase, end=' ')
+        phase = value
+        print(phase)
         if value == "DISABLED":
-            ser.write(commands['off'])
+            curSignal = commands['off']
+            ser.write(curSignal)
         elif value == "AUTONOMOUS":
-            ser.write(commands['auto'])
-        elif value == "TELEOP":
-            ser.write(commands['teleopF'])
+            curSignal = commands['auto']
+            ser.write(curSignal)
+        elif value == "TELEOP" and superstructureState == "CLIMB":
+            curSignal = commands['climb']
+            ser.write(curSignal)
+        elif value == "TELEOP" and not reversed:
+            curSignal = commands['teleopF']
+            ser.write(curSignal)
+        elif value == "TELEOP" and reversed:
+            curSignal = commands['teleopR']
+            ser.write(curSignal)
         elif value == "TEST":
-            ser.write(commands['testingF'])
+            curSignal = commands['testing']
+            ser.write(curSignal)
+
+# listen to networktable
+def superListener(table, key, value, isNew):
+    if key == "Reverse":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        reversed = value
+        global phase
+        print("Reversed:", reversed)
+        if phase == "TELEOP" and not reversed:
+            curSignal = commands['teleopF']
+            ser.write(curSignal)
+        elif phase == "TELEOP" and reversed:
+            curSignal = commands['teleopR']
+            ser.write(curSignal)
+    elif key == "WantedState":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        superstructureState = value
+
+# check for response in bling
+def blingListener(table, key, value, isNew):
+    if key == "State" and value == "Acquired":
+        print(f"valueChanged: key: '{key}'; value: {value}; isNew: {isNew}")
+        ser.write(commands['bling'])
+        time.sleep(3)
+        ser.write(curSignal)
 
 
 def connectionListener(connected, info):
@@ -76,8 +152,19 @@ def connectionListener(connected, info):
 
 NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
 
-sd = NetworkTables.getTable("SmartDashboard/Robot")
-sd.addEntryListener(valueChanged)
+robot = NetworkTables.getTable("SmartDashboard/Robot")
+robot.addEntryListener(valueChanged)
+
+superstructure = NetworkTables.getTable("SmartDashboard/Superstructure")
+superstructure.addEntryListener(superListener)
+
+vision = NetworkTables.getTable("SmartDashboard/Vision")
+vision.addEntryListener(blingListener)
 
 while True:
+    try:
+        print(str(ser.read()), sep='', end='')
+    except SerialException:
+        ser.close()
+        serialize()
     time.sleep(1)
